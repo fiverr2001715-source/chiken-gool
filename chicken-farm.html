@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Chicken Farm Tycoon</title>
+<script src="//libtl.com/sdk.js" data-zone="ZONE_ID" data-sdk="show_ZONE_ID"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-sky-top:#8FD8F0;
+    --bg-sky-bot:#CDEFC4;
+    --card:#FFFFFF;
+    --card-line:#EDEBDF;
+    --ink:#2E2A1F;
+    --ink-dim:#8A8367;
+    --brown:#8C5A34;
+    --brown-dk:#6B4023;
+    --leaf:#5FA85B;
+    --leaf-dk:#3F7D3F;
+    --gold:#F4B942;
+    --gold-dk:#C98A1C;
+    --sky-blue:#3FA9D9;
+    --coral:#F0714F;
+    --shadow:0 4px 0 rgba(0,0,0,.15);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Nunito',sans-serif; color:var(--ink);
+    background:linear-gradient(180deg,var(--bg-sky-top) 0%, var(--bg-sky-bot) 100%);
+    min-height:100vh; padding-bottom:74px; overscroll-behavior:none; user-select:none;
+  }
+  h1,h2,h3,.display{font-family:'Baloo 2',sans-serif;}
+  button{font-family:inherit; border:none; cursor:pointer;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 14px; gap:8px;
+  }
+  .brand{display:flex; align-items:center; gap:8px; font-family:'Baloo 2'; font-weight:800; font-size:18px; color:var(--brown-dk);}
+  .brand .egg{font-size:24px;}
+  .stat-pill{
+    display:flex; align-items:center; gap:5px; background:var(--card);
+    border:2px solid var(--card-line); border-radius:20px; padding:5px 10px 5px 6px;
+    font-weight:800; font-size:13px; box-shadow:var(--shadow);
+  }
+  .stat-pill .ic{font-size:16px;}
+  .stats-row{display:flex; gap:8px; padding:0 14px 8px;}
+
+  /* ---------- Screens ---------- */
+  .screen{display:none; padding:0 14px 14px; animation:fade .25s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .card{
+    background:var(--card); border:2px solid var(--card-line); border-radius:18px;
+    padding:14px; margin-bottom:12px; box-shadow:var(--shadow);
+  }
+  .card h3{margin:0 0 8px; font-size:15px; color:var(--brown-dk);}
+
+  /* ---------- Farm screen ---------- */
+  .farm-scene{
+    position:relative; height:230px; border-radius:20px; overflow:hidden; margin-bottom:12px;
+    background:linear-gradient(180deg,#8FD8F0 0%,#B7E9A6 55%,#7BC96F 100%);
+    border:3px solid var(--card-line);
+  }
+  .barn{position:absolute; right:10px; top:10px; width:70px; text-align:center; font-size:34px;}
+  .coop-row{position:absolute; bottom:14px; left:0; right:0; display:flex; justify-content:center; gap:10px;}
+  .chicken{
+    font-size:40px; cursor:pointer; transition:transform .08s ease; filter:drop-shadow(0 3px 2px rgba(0,0,0,.2));
+  }
+  .chicken:active{transform:scale(.85) rotate(-6deg);}
+  .silo-wrap{position:absolute; left:10px; top:10px; width:60px;}
+  .silo{
+    width:26px; height:70px; margin:0 auto; border-radius:6px 6px 3px 3px; background:#DCE7EF;
+    border:2px solid #B9C9D6; position:relative; overflow:hidden;
+  }
+  .silo-fill{position:absolute; bottom:0; left:0; right:0; background:var(--gold); transition:height .3s ease;}
+  .silo-label{font-size:10px; text-align:center; font-weight:800; color:var(--ink-dim); margin-top:2px;}
+
+  .float-pop{
+    position:absolute; font-weight:800; color:var(--gold-dk); font-size:16px;
+    pointer-events:none; animation:popUp .8s ease forwards;
+  }
+  @keyframes popUp{0%{opacity:1; transform:translateY(0);} 100%{opacity:0; transform:translateY(-40px);}}
+
+  .energy-row{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+  .bar-track{flex:1; height:14px; background:#EFEAD8; border-radius:8px; overflow:hidden; border:1px solid var(--card-line);}
+  .bar-fill{height:100%; border-radius:8px; transition:width .3s ease;}
+  .energy-fill{background:linear-gradient(90deg,#7FD8E8,#3FA9D9);}
+  .xp-fill{background:linear-gradient(90deg,#B9E86A,#5FA85B);}
+
+  .level-row{display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:800; color:var(--ink-dim); margin-bottom:4px;}
+
+  .shop-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .shop-item{
+    background:#FBF8EF; border:2px solid var(--card-line); border-radius:14px; padding:10px; text-align:center;
+  }
+  .shop-item .ic{font-size:30px;}
+  .shop-item .name{font-weight:800; font-size:13px; margin:4px 0 2px;}
+  .shop-item .desc{font-size:11px; color:var(--ink-dim); margin-bottom:8px;}
+  .buy-btn{
+    width:100%; padding:8px; border-radius:10px; background:var(--leaf); color:#fff; font-weight:800; font-size:13px; box-shadow:var(--shadow);
+  }
+  .buy-btn:disabled{background:#C9C4B0; box-shadow:none; cursor:not-allowed;}
+
+  /* ---------- Bottom nav ---------- */
+  .bottom-nav{
+    position:fixed; bottom:0; left:0; right:0; background:var(--card);
+    border-top:2px solid var(--card-line); display:flex; padding:6px 4px;
+    box-shadow:0 -3px 10px rgba(0,0,0,.06); z-index:20;
+  }
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+    background:none; padding:6px 2px; border-radius:12px; color:var(--ink-dim); font-size:10px; font-weight:800;
+  }
+  .nav-btn .ic{font-size:20px;}
+  .nav-btn.active{color:var(--leaf-dk); background:#EAF6E4;}
+
+  /* ---------- Dashboard ---------- */
+  .kpi-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .kpi{background:#FBF8EF; border:2px solid var(--card-line); border-radius:14px; padding:10px;}
+  .kpi .lbl{font-size:11px; color:var(--ink-dim); font-weight:700;}
+  .kpi .val{font-size:20px; font-weight:800; color:var(--brown-dk);}
+  .chart-row{display:flex; align-items:flex-end; gap:10px; height:90px; margin-top:8px;}
+  .chart-col{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .chart-bar{width:100%; border-radius:6px 6px 0 0; background:var(--leaf);}
+  .chart-bar.today{background:var(--gold);}
+  .chart-lbl{font-size:10px; font-weight:800; color:var(--ink-dim);}
+
+  /* ---------- Tasks ---------- */
+  .task-row{
+    display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--card-line);
+  }
+  .task-row:last-child{border-bottom:none;}
+  .task-ic{font-size:24px;}
+  .task-body{flex:1;}
+  .task-title{font-weight:800; font-size:13px;}
+  .task-reward{font-size:11px; color:var(--gold-dk); font-weight:700;}
+  .task-btn{
+    padding:7px 12px; border-radius:10px; font-size:12px; font-weight:800; background:var(--leaf); color:#fff;
+  }
+  .task-btn.done{background:#C9C4B0; color:#fff;}
+  .task-btn.claim{background:var(--gold); color:var(--brown-dk);}
+
+  /* ---------- Wheel ---------- */
+  .wheel-wrap{display:flex; flex-direction:column; align-items:center; padding:8px 0 4px;}
+  .wheel-outer{position:relative; width:230px; height:230px;}
+  #wheelCanvas{width:230px; height:230px; transition:transform 3.2s cubic-bezier(.17,.67,.2,1);}
+  .wheel-pointer{
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:12px solid transparent; border-right:12px solid transparent;
+    border-top:20px solid var(--coral); z-index:5;
+  }
+  .spin-count{font-size:12px; font-weight:800; color:var(--ink-dim); margin:8px 0;}
+  .spin-btn{
+    padding:12px 26px; border-radius:16px; background:var(--coral); color:#fff; font-weight:800; font-size:15px; box-shadow:var(--shadow);
+  }
+  .spin-btn:disabled{background:#C9C4B0; box-shadow:none;}
+  .ad-spin-row{display:flex; gap:8px; margin-top:10px; width:100%;}
+  .ad-spin-btn{flex:1; padding:9px; border-radius:12px; background:var(--sky-blue); color:#fff; font-weight:800; font-size:12px;}
+  .ad-spin-btn:disabled{background:#C9C4B0;}
+
+  /* ---------- Withdraw ---------- */
+  .progress-track{height:16px; background:#EFEAD8; border-radius:10px; overflow:hidden; border:1px solid var(--card-line); margin:8px 0 4px;}
+  .progress-fill{height:100%; background:linear-gradient(90deg,var(--gold),var(--coral)); transition:width .4s ease;}
+  .threshold-row{display:flex; justify-content:space-between; font-size:11px; color:var(--ink-dim); font-weight:700; margin-bottom:10px;}
+  .withdraw-btn{
+    width:100%; padding:12px; border-radius:14px; background:var(--leaf); color:#fff; font-weight:800; font-size:15px; box-shadow:var(--shadow);
+  }
+  .withdraw-btn:disabled{background:#C9C4B0; box-shadow:none;}
+  .note{font-size:11px; color:var(--ink-dim); line-height:1.6; margin-top:8px;}
+
+  /* ---------- Friends ---------- */
+  .invite-box{display:flex; gap:8px; align-items:center; background:#FBF8EF; border:2px dashed var(--card-line); border-radius:14px; padding:12px; margin-bottom:12px;}
+  .invite-box input{flex:1; border:none; background:transparent; font-size:12px; color:var(--ink-dim); font-weight:700;}
+  .copy-btn{padding:8px 12px; border-radius:10px; background:var(--sky-blue); color:#fff; font-weight:800; font-size:12px;}
+  .game-card{display:flex; align-items:center; gap:10px; padding:10px; border-radius:14px; background:#FBF8EF; border:2px solid var(--card-line); margin-bottom:8px;}
+  .game-card .ic{font-size:28px;}
+  .game-card .info{flex:1;}
+  .game-card .info .name{font-weight:800; font-size:13px;}
+  .game-card .info .desc{font-size:11px; color:var(--ink-dim);}
+  .game-card .open-btn{padding:7px 12px; border-radius:10px; background:var(--gold); color:var(--brown-dk); font-weight:800; font-size:12px;}
+
+  /* ---------- Settings ---------- */
+  .setting-row{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--card-line);}
+  .setting-row:last-child{border-bottom:none;}
+  .setting-lbl{font-weight:700; font-size:14px;}
+  .switch{position:relative; width:44px; height:24px; background:#D8D2BC; border-radius:14px; transition:background .2s;}
+  .switch.on{background:var(--leaf);}
+  .switch .knob{position:absolute; top:2px; left:2px; width:20px; height:20px; background:#fff; border-radius:50%; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .switch.on .knob{left:22px;}
+  input[type=range]{width:100px;}
+  .danger-btn{width:100%; padding:12px; border-radius:14px; background:var(--coral); color:#fff; font-weight:800; margin-top:6px;}
+
+  /* ---------- Toast / Modal ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:10px 18px; border-radius:12px; font-size:13px; font-weight:700;
+    opacity:0; transition:all .3s ease; z-index:100; max-width:88%; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:200; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{background:#fff; border-radius:20px; padding:20px; max-width:320px; width:100%; text-align:center;}
+  .modal-box .ic{font-size:44px; margin-bottom:8px;}
+  .modal-box h3{margin:0 0 8px;}
+  .modal-box p{font-size:13px; color:var(--ink-dim); line-height:1.6; margin:0 0 16px;}
+  .modal-btn-row{display:flex; gap:8px;}
+  .modal-btn{flex:1; padding:11px; border-radius:12px; font-weight:800; font-size:13px;}
+  .modal-btn.primary{background:var(--leaf); color:#fff;}
+  .modal-btn.secondary{background:#EFEAD8; color:var(--ink);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="egg">🐣</span> Chicken Farm Tycoon</div>
+</div>
+<div class="stats-row">
+  <div class="stat-pill"><span class="ic">💎</span><span id="gemsLabel">0</span></div>
+  <div class="stat-pill"><span class="ic">🪙</span><span id="tonLabel">0</span></div>
+  <div class="stat-pill"><span class="ic">⚡</span><span id="energyLabel">100</span></div>
+</div>
+
+<!-- ================= FARM SCREEN ================= -->
+<div class="screen active" id="screen-farm">
+  <div class="level-row"><span id="levelLabel">Level 1</span><span id="xpLabel">0 / 100 XP</span></div>
+  <div class="bar-track"><div class="bar-fill xp-fill" id="xpBar" style="width:0%"></div></div>
+  <div style="height:10px"></div>
+
+  <div class="farm-scene" id="farmScene">
+    <div class="silo-wrap">
+      <div class="silo"><div class="silo-fill" id="siloFill" style="height:0%"></div></div>
+      <div class="silo-label">Silo</div>
+    </div>
+    <div class="barn">🏚️<div style="font-size:10px;font-weight:800;color:#3F7D3F">Barn</div></div>
+    <div class="coop-row" id="coopRow"></div>
+  </div>
+
+  <div class="energy-row">
+    <span style="font-size:18px">⚡</span>
+    <div class="bar-track"><div class="bar-fill energy-fill" id="energyBar" style="width:100%"></div></div>
+  </div>
+
+  <div class="card">
+    <h3>🐤 Farm Shop</h3>
+    <div class="shop-grid">
+      <div class="shop-item">
+        <div class="ic">🐔</div>
+        <div class="name">Chicken</div>
+        <div class="desc" id="chickenCostLbl">Cost: 50 💎</div>
+        <button class="buy-btn" id="buyChickenBtn">Buy</button>
+      </div>
+      <div class="shop-item">
+        <div class="ic">🌾</div>
+        <div class="name">Feed</div>
+        <div class="desc" id="feedCostLbl">+20 XP • Cost: 20 💎</div>
+        <button class="buy-btn" id="buyFeedBtn">Buy</button>
+      </div>
+      <div class="shop-item">
+        <div class="ic">🧸</div>
+        <div class="name">Toy</div>
+        <div class="desc" id="toyCostLbl">+35 XP • Cost: 35 💎</div>
+        <button class="buy-btn" id="buyToyBtn">Buy</button>
+      </div>
+      <div class="shop-item">
+        <div class="ic">🏠</div>
+        <div class="name">Coop Upgrade</div>
+        <div class="desc" id="upgradeCostLbl">+1 slot • Cost: 150 💎</div>
+        <button class="buy-btn" id="buyUpgradeBtn">Buy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD SCREEN ================= -->
+<div class="screen" id="screen-dashboard">
+  <div class="card">
+    <h3>📊 Farm Dashboard</h3>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="lbl">Chickens</div><div class="val" id="kpiChickens">0</div></div>
+      <div class="kpi"><div class="lbl">Feed / min</div><div class="val" id="kpiRate">0</div></div>
+      <div class="kpi"><div class="lbl">Gems</div><div class="val" id="kpiGems">0</div></div>
+      <div class="kpi"><div class="lbl">TON Gems</div><div class="val" id="kpiTon">0</div></div>
+      <div class="kpi"><div class="lbl">Day streak</div><div class="val" id="kpiStreak">1 🔥</div></div>
+      <div class="kpi"><div class="lbl">Withdraw goal</div><div class="val" id="kpiGoal">0%</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📈 Earnings — yesterday vs today</h3>
+    <div class="chart-row">
+      <div class="chart-col"><div class="chart-bar" id="barYesterday" style="height:10%"></div><div class="chart-lbl">Yesterday</div></div>
+      <div class="chart-col"><div class="chart-bar today" id="barToday" style="height:10%"></div><div class="chart-lbl">Today</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TASKS SCREEN ================= -->
+<div class="screen" id="screen-tasks">
+  <div class="card">
+    <h3>📋 Daily Tasks <span style="font-weight:400;font-size:11px;color:var(--ink-dim)">— resets at midnight</span></h3>
+    <div id="taskList"></div>
+  </div>
+</div>
+
+<!-- ================= WHEEL SCREEN ================= -->
+<div class="screen" id="screen-wheel">
+  <div class="card">
+    <h3>🎡 Lucky Wheel</h3>
+    <div class="wheel-wrap">
+      <div class="wheel-outer">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheelCanvas" width="230" height="230"></canvas>
+      </div>
+      <div class="spin-count" id="spinCountLbl">5 free spins left today</div>
+      <button class="spin-btn" id="spinBtn">SPIN</button>
+      <div class="ad-spin-row">
+        <button class="ad-spin-btn" id="adSpinBtn">📺 +1 spin (ad)</button>
+        <button class="ad-spin-btn" id="adBonusBtn">📺 Bonus prize (ad)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= WITHDRAW SCREEN ================= -->
+<div class="screen" id="screen-withdraw">
+  <div class="card">
+    <h3>🪙 Withdraw Progress</h3>
+    <div class="threshold-row"><span>0</span><span id="thresholdLbl">🏁 600 TON Gems (≈ $5.00)</span></div>
+    <div class="progress-track"><div class="progress-fill" id="withdrawProgress" style="width:0%"></div></div>
+    <button class="withdraw-btn" id="withdrawBtn" disabled>Request Withdrawal</button>
+    <div class="note">Keep collecting TON Gems from tasks and the wheel each day — most players reach the goal within about a week of steady play. Withdrawal requests are reviewed and processed by the game operator; there is no fee to request or receive your withdrawal.</div>
+  </div>
+</div>
+
+<!-- ================= FRIENDS SCREEN ================= -->
+<div class="screen" id="screen-friends">
+  <div class="card">
+    <h3>👥 Invite Friends</h3>
+    <div class="invite-box">
+      <input readonly id="inviteLink" value="https://t.me/forest444_bot?start=ref">
+      <button class="copy-btn" id="copyInviteBtn">Copy</button>
+    </div>
+    <div class="note">You and your friend each get 20 💎 + 5 🪙 once they reach level 2.</div>
+  </div>
+  <div class="card">
+    <h3>🎮 More games</h3>
+    <div class="game-card">
+      <div class="ic">🐇</div>
+      <div class="info"><div class="name">Rabbit Forest</div><div class="desc">Tap-to-earn forest adventure</div></div>
+      <a class="open-btn" href="https://t.me/forest444_bot" target="_blank">Open</a>
+    </div>
+    <div class="game-card">
+      <div class="ic">✨</div>
+      <div class="info"><div class="name">Stardust Tap</div><div class="desc">Collect stars, level up</div></div>
+      <a class="open-btn" href="https://t.me/StardustTapBot" target="_blank">Open</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SETTINGS SCREEN ================= -->
+<div class="screen" id="screen-settings">
+  <div class="card">
+    <div class="setting-row">
+      <span class="setting-lbl">🔊 Sound effects</span>
+      <div class="switch on" id="sfxSwitch"><div class="knob"></div></div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-lbl">🎵 Music</span>
+      <div class="switch on" id="musicSwitch"><div class="knob"></div></div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-lbl">Music volume</span>
+      <input type="range" id="volumeSlider" min="0" max="100" value="40">
+    </div>
+    <div class="setting-row">
+      <span class="setting-lbl">🔔 Notifications</span>
+      <div class="switch" id="notifSwitch"><div class="knob"></div></div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-lbl">🌐 Language</span>
+      <span style="font-weight:800; font-size:13px; color:var(--ink-dim)">English</span>
+    </div>
+  </div>
+  <div class="card">
+    <button class="danger-btn" id="resetBtn">Reset Progress</button>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" data-screen="farm"><span class="ic">🐔</span>Farm</button>
+  <button class="nav-btn" data-screen="dashboard"><span class="ic">📊</span>Stats</button>
+  <button class="nav-btn" data-screen="tasks"><span class="ic">📋</span>Tasks</button>
+  <button class="nav-btn" data-screen="wheel"><span class="ic">🎡</span>Wheel</button>
+  <button class="nav-btn" data-screen="withdraw"><span class="ic">🪙</span>Cash out</button>
+  <button class="nav-btn" data-screen="friends"><span class="ic">👥</span>Friends</button>
+  <button class="nav-btn" data-screen="settings"><span class="ic">⚙️</span>Settings</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="ic" id="modalIcon">🎉</div>
+    <h3 id="modalTitle">Title</h3>
+    <p id="modalText">Text</p>
+    <div class="modal-btn-row" id="modalBtnRow">
+      <button class="modal-btn primary" id="modalOkBtn">OK</button>
+    </div>
+  </div>
+</div>
+
+<audio id="sfxTap" preload="none"><!-- TODO: replace with licensed asset --></audio>
+<audio id="sfxCoin" preload="none"><!-- TODO: replace with licensed asset --></audio>
+<audio id="sfxLevelUp" preload="none"><!-- TODO: replace with licensed asset --></audio>
+<audio id="sfxWheelTick" preload="none"><!-- TODO: replace with licensed asset --></audio>
+<audio id="sfxWheelWin" preload="none"><!-- TODO: replace with licensed asset --></audio>
+<audio id="bgMusic" loop preload="none"><!-- TODO: replace with licensed loopable farm/casual track --></audio>
+
+<script>
+try{ Telegram.WebApp.ready(); Telegram.WebApp.expand(); }catch(e){}
+
+/* ==================================================================
+   Economy constants (kept auditable / rebalance here)
+   Assumed daily average TON Gems income used to size the withdrawal goal:
+     - Daily tasks (4 tasks x ~10 avg)          ~ 40 / day
+     - Free wheel spins (5 x ~8 avg TON reward) ~ 40 / day
+     - Ad-boosted spins (2 x ~8 avg)            ~ 16 / day
+     - Daily login/streak bonus                 ~  5 / day
+     => ~101 TON Gems/day average
+   TARGET_TON_GEMS = 600  =>  ~6 days of steady daily play to reach the
+   withdrawal goal (within the intended 5-10 day range).
+================================================================== */
+const MAX_ENERGY        = 100;
+const ENERGY_REGEN_MS   = 3000;
+const TAP_ENERGY_COST   = 1;
+const DAILY_TAP_CAP     = 200;
+const TARGET_TON_GEMS   = 600;
+const WITHDRAW_USD      = 5.00;
+const FREE_SPINS_DAILY  = 5;
+const AD_SPINS_MAX      = 2;   // ads that grant an extra spin
+const AD_BONUS_MAX      = 8;   // ads that grant a small direct bonus (wheel screen)
+
+const MONETAG = { showAdFunctionName: 'show_ZONE_ID' };
+function isMonetagReady(){ return typeof window[MONETAG.showAdFunctionName] === 'function'; }
+function showRewardedAd(onReward, onFail){
+  if(isMonetagReady()){
+    window[MONETAG.showAdFunctionName]().then(() => onReward()).catch(() => { if(onFail) onFail(); });
+  } else {
+    if(onFail) onFail();
+  }
+}
+
+/* ==================================================================
+   State
+================================================================== */
+const todayKey = () => new Date().toISOString().slice(0,10);
+
+function defaultState(){
+  return {
+    gems: 60,
+    ton: 0,
+    chickens: 2,
+    coopSlots: 4,
+    level: 1,
+    xp: 0,
+    energy: MAX_ENERGY,
+    lastEnergyTs: Date.now(),
+    totalTapsToday: 0,
+    lastActiveDay: todayKey(),
+    streak: 1,
+    earnedToday: 0,
+    earnedYesterday: 0,
+    tasks: {},
+    freeSpinsLeft: FREE_SPINS_DAILY,
+    adSpinsUsed: 0,
+    adBonusUsed: 0,
+    settings: { sfx:true, music:true, volume:40, notif:false },
+    lastCollectTs: Date.now()
+  };
+}
+
+function loadState(){
+  let s;
+  try{ s = JSON.parse(localStorage.getItem('cft_state')); }catch(e){ s = null; }
+  if(!s) return defaultState();
+  const def = defaultState();
+  for(const k in def){ if(s[k] === undefined) s[k] = def[k]; }
+  // daily reset
+  if(s.lastActiveDay !== todayKey()){
+    const yesterdayWasActive = s.lastActiveDay === new Date(Date.now()-86400000).toISOString().slice(0,10);
+    s.streak = yesterdayWasActive ? s.streak + 1 : 1;
+    s.earnedYesterday = s.earnedToday;
+    s.earnedToday = 0;
+    s.freeSpinsLeft = FREE_SPINS_DAILY;
+    s.adSpinsUsed = 0;
+    s.adBonusUsed = 0;
+    s.tasks = {};
+    s.totalTapsToday = 0;
+    s.lastActiveDay = todayKey();
+  }
+  return s;
+}
+let state = loadState();
+function saveState(){ localStorage.setItem('cft_state', JSON.stringify(state)); }
+
+/* ==================================================================
+   Tasks definition
+================================================================== */
+const TASK_DEFS = [
+  { id:'feed20', title:'Feed your chickens 20 times', icon:'🌾', target:20, reward:{gems:0,ton:8}, prog:s=>s.totalTapsToday },
+  { id:'watchAd', title:'Watch 1 rewarded ad', icon:'📺', target:1, reward:{gems:10,ton:5}, prog:s=>s.tasks.watchAdCount||0 },
+  { id:'spinWheel', title:'Spin the wheel 3 times', icon:'🎡', target:3, reward:{gems:0,ton:10}, prog:s=>s.tasks.spinCount||0 },
+  { id:'buyItem', title:'Buy 1 item from the shop', icon:'🛒', target:1, reward:{gems:15,ton:0}, prog:s=>s.tasks.buyCount||0 }
+];
+
+/* ==================================================================
+   DOM refs
+================================================================== */
+const $ = id => document.getElementById(id);
+const gemsLabel=$('gemsLabel'), tonLabel=$('tonLabel'), energyLabel=$('energyLabel');
+const coopRow=$('coopRow'), siloFill=$('siloFill');
+const energyBar=$('energyBar'), xpBar=$('xpBar'), levelLabel=$('levelLabel'), xpLabel=$('xpLabel');
+const toastEl=$('toast');
+const modalOverlay=$('modalOverlay'), modalIcon=$('modalIcon'), modalTitle=$('modalTitle'), modalText=$('modalText'), modalOkBtn=$('modalOkBtn');
+
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>toastEl.classList.remove('show'), 2400);
+}
+function openModal(icon,title,text,onOk){
+  modalIcon.textContent=icon; modalTitle.textContent=title; modalText.textContent=text;
+  modalOverlay.classList.add('show');
+  modalOkBtn.onclick = ()=>{ modalOverlay.classList.remove('show'); if(onOk) onOk(); };
+}
+
+/* ==================================================================
+   Navigation
+================================================================== */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    btn.classList.add('active');
+    $('screen-'+btn.dataset.screen).classList.add('active');
+    if(btn.dataset.screen==='wheel') drawWheel();
+    render();
+  });
+});
+
+/* ==================================================================
+   Energy regen loop
+================================================================== */
+setInterval(()=>{
+  const now=Date.now();
+  const elapsed=now-state.lastEnergyTs;
+  const regen=Math.floor(elapsed/ENERGY_REGEN_MS);
+  if(regen>0 && state.energy<MAX_ENERGY){
+    state.energy=Math.min(MAX_ENERGY,state.energy+regen);
+    state.lastEnergyTs=now;
+    saveState(); render();
+  }
+},1000);
+
+/* ==================================================================
+   Chickens render + tap
+================================================================== */
+function renderChickens(){
+  coopRow.innerHTML='';
+  const shown=Math.min(state.chickens, state.coopSlots);
+  for(let i=0;i<shown;i++){
+    const c=document.createElement('div');
+    c.className='chicken'; c.textContent='🐔';
+    c.addEventListener('click',(e)=>tapChicken(e,c));
+    coopRow.appendChild(c);
+  }
+}
+function feedRatePerMin(){ return state.chickens * 2; } // idle production baseline
+
+function tapChicken(e,el){
+  if(state.energy < TAP_ENERGY_COST){
+    showToast('⚡ Out of energy — wait a bit or check the shop for a refill task');
+    return;
+  }
+  if(state.totalTapsToday >= DAILY_TAP_CAP){
+    showToast('🌙 Daily tap limit reached — come back tomorrow!');
+    return;
+  }
+  state.energy -= TAP_ENERGY_COST;
+  state.lastEnergyTs = Date.now();
+  state.totalTapsToday += 1;
+
+  const gain = Math.random()<0.1 ? 5 : 2;
+  state.gems += gain;
+  state.xp += 1;
+  state.earnedToday += gain;
+
+  const rect=el.getBoundingClientRect();
+  const sceneRect=$('farmScene').getBoundingClientRect();
+  const pop=document.createElement('div');
+  pop.className='float-pop'; pop.textContent='+'+gain+' 💎';
+  pop.style.left=(rect.left-sceneRect.left)+'px';
+  pop.style.top=(rect.top-sceneRect.top)+'px';
+  $('farmScene').appendChild(pop);
+  setTimeout(()=>pop.remove(),800);
+
+  checkLevelUp();
+  saveState(); render();
+}
+
+function xpNeeded(level){ return 100 + (level-1)*40; }
+function checkLevelUp(){
+  const needed=xpNeeded(state.level);
+  if(state.xp>=needed){
+    state.xp-=needed;
+    state.level+=1;
+    state.coopSlots = 4 + Math.floor(state.level/2);
+    openModal('🎉','Level up!','You reached level '+state.level+'! New coop capacity: '+state.coopSlots+'.');
+  }
+}
+
+/* ==================================================================
+   Shop
+================================================================== */
+function chickenCost(){ return 50 + (state.chickens-2)*25; }
+function feedCost(){ return 20; }
+function toyCost(){ return 35; }
+function upgradeCost(){ return 150 + (state.coopSlots-4)*100; }
+
+$('buyChickenBtn').addEventListener('click', ()=>{
+  const cost=chickenCost();
+  if(state.chickens>=state.coopSlots){ showToast('🏠 Coop is full — buy a Coop Upgrade first'); return; }
+  if(state.gems<cost){ showToast('💎 Not enough Gems'); return; }
+  state.gems-=cost; state.chickens+=1;
+  state.tasks.buyCount=(state.tasks.buyCount||0)+1;
+  showToast('🐔 New chicken joined the farm!');
+  saveState(); render();
+});
+$('buyFeedBtn').addEventListener('click', ()=>{
+  const cost=feedCost();
+  if(state.gems<cost){ showToast('💎 Not enough Gems'); return; }
+  state.gems-=cost; state.xp+=20; checkLevelUp();
+  state.tasks.buyCount=(state.tasks.buyCount||0)+1;
+  showToast('🌾 Chickens fed! +20 XP');
+  saveState(); render();
+});
+$('buyToyBtn').addEventListener('click', ()=>{
+  const cost=toyCost();
+  if(state.gems<cost){ showToast('💎 Not enough Gems'); return; }
+  state.gems-=cost; state.xp+=35; checkLevelUp();
+  state.tasks.buyCount=(state.tasks.buyCount||0)+1;
+  showToast('🧸 Chickens are playing happily! +35 XP');
+  saveState(); render();
+});
+$('buyUpgradeBtn').addEventListener('click', ()=>{
+  const cost=upgradeCost();
+  if(state.gems<cost){ showToast('💎 Not enough Gems'); return; }
+  state.gems-=cost; state.coopSlots+=1;
+  showToast('🏠 Coop expanded! +1 slot');
+  saveState(); render();
+});
+
+/* ==================================================================
+   Idle production — collected passively over time
+================================================================== */
+setInterval(()=>{
+  const now=Date.now();
+  const mins=(now-state.lastCollectTs)/60000;
+  if(mins>0.05){
+    const earned=Math.floor(feedRatePerMin()*mins);
+    if(earned>0){ state.gems+=earned; state.earnedToday+=earned; }
+    state.lastCollectTs=now;
+    saveState(); render();
+  }
+},4000);
+
+/* ==================================================================
+   Tasks
+================================================================== */
+function renderTasks(){
+  const list=$('taskList'); list.innerHTML='';
+  TASK_DEFS.forEach(def=>{
+    const prog=Math.min(def.prog(state), def.target);
+    const done=prog>=def.target;
+    const claimed=!!state.tasks[def.id+'_claimed'];
+    const row=document.createElement('div');
+    row.className='task-row';
+    const rewardTxt=[def.reward.gems?def.reward.gems+' 💎':null, def.reward.ton?def.reward.ton+' 🪙':null].filter(Boolean).join(' + ');
+    row.innerHTML=`
+      <div class="task-ic">${def.icon}</div>
+      <div class="task-body">
+        <div class="task-title">${def.title}</div>
+        <div class="task-reward">${prog}/${def.target} · Reward: ${rewardTxt}</div>
+      </div>
+      <button class="task-btn ${claimed?'done':(done?'claim':'')}" ${(claimed||!done)?'disabled':''} data-id="${def.id}">
+        ${claimed?'Claimed':(done?'Claim':'In progress')}
+      </button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll('.task-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const def=TASK_DEFS.find(d=>d.id===btn.dataset.id);
+      if(!def) return;
+      state.tasks[def.id+'_claimed']=true;
+      state.gems+=def.reward.gems; state.ton+=def.reward.ton;
+      showToast('✅ Task claimed: +'+[def.reward.gems?def.reward.gems+' 💎':null, def.reward.ton?def.reward.ton+' 🪙':null].filter(Boolean).join(', '));
+      saveState(); render();
+    });
+  });
+}
+
+/* ==================================================================
+   Wheel
+================================================================== */
+const WHEEL_SEGMENTS = [
+  {label:'5 💎', gems:5, ton:0, color:'#F4B942'},
+  {label:'8 🪙', gems:0, ton:8, color:'#F0714F'},
+  {label:'10 💎', gems:10, ton:0, color:'#5FA85B'},
+  {label:'3 🪙', gems:0, ton:3, color:'#3FA9D9'},
+  {label:'20 💎', gems:20, ton:0, color:'#F4B942'},
+  {label:'12 🪙', gems:0, ton:12, color:'#F0714F'},
+  {label:'DOUBLE!', gems:0, ton:0, color:'#8C5A34', double:true},
+  {label:'6 🪙', gems:0, ton:6, color:'#3FA9D9'}
+];
+let wheelRotation=0, spinning=false;
+function drawWheel(){
+  const c=$('wheelCanvas'), ctx=c.getContext('2d');
+  const n=WHEEL_SEGMENTS.length, r=115, cx=115, cy=115;
+  ctx.clearRect(0,0,230,230);
+  WHEEL_SEGMENTS.forEach((seg,i)=>{
+    const a0=(i/n)*2*Math.PI, a1=((i+1)/n)*2*Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,a0,a1); ctx.closePath();
+    ctx.fillStyle=seg.color; ctx.fill();
+    ctx.save();
+    ctx.translate(cx,cy); ctx.rotate((a0+a1)/2);
+    ctx.fillStyle='#fff'; ctx.font='bold 13px Nunito, sans-serif'; ctx.textAlign='right';
+    ctx.fillText(seg.label, r-14, 5);
+    ctx.restore();
+  });
+  ctx.beginPath(); ctx.arc(cx,cy,14,0,2*Math.PI); ctx.fillStyle='#fff'; ctx.fill();
+}
+function spinsAvailable(){ return state.freeSpinsLeft>0; }
+function updateWheelUI(){
+  $('spinCountLbl').textContent = state.freeSpinsLeft+' free spins left today';
+  $('spinBtn').disabled = spinning || !spinsAvailable();
+  $('adSpinBtn').disabled = spinning || state.adSpinsUsed>=AD_SPINS_MAX;
+  $('adSpinBtn').textContent = '📺 +1 spin ('+(AD_SPINS_MAX-state.adSpinsUsed)+' left)';
+  $('adBonusBtn').disabled = spinning || state.adBonusUsed>=AD_BONUS_MAX;
+  $('adBonusBtn').textContent = '📺 Bonus prize ('+(AD_BONUS_MAX-state.adBonusUsed)+' left)';
+}
+function doSpin(){
+  if(spinning || !spinsAvailable()) return;
+  spinning=true; state.freeSpinsLeft-=1;
+  state.tasks.spinCount=(state.tasks.spinCount||0)+1;
+  const n=WHEEL_SEGMENTS.length;
+  const idx=Math.floor(Math.random()*n);
+  const targetDeg = 360*5 + (360 - (idx*(360/n)) - (360/n)/2);
+  wheelRotation += targetDeg;
+  const canvas=$('wheelCanvas');
+  canvas.style.transform='rotate('+wheelRotation+'deg)';
+  saveState();
+  setTimeout(()=>{
+    const seg=WHEEL_SEGMENTS[idx];
+    if(seg.double){
+      state.gems+=20; state.ton+=6;
+      openModal('🎉','Double reward!','You won +20 💎 and +6 🪙!');
+    } else {
+      state.gems+=seg.gems; state.ton+=seg.ton;
+      openModal('🎁','You won!','+'+[seg.gems?seg.gems+' 💎':null, seg.ton?seg.ton+' 🪙':null].filter(Boolean).join(' and ')+'!');
+    }
+    spinning=false;
+    saveState(); render();
+  },3300);
+}
+$('spinBtn').addEventListener('click', doSpin);
+$('adSpinBtn').addEventListener('click', ()=>{
+  if(state.adSpinsUsed>=AD_SPINS_MAX) return;
+  showRewardedAd(
+    ()=>{
+      state.adSpinsUsed+=1; state.freeSpinsLeft+=1;
+      state.tasks.watchAdCount=(state.tasks.watchAdCount||0)+1;
+      showToast('📺 +1 spin unlocked!');
+      saveState(); render();
+    },
+    ()=> showToast('⚠️ Ad not available right now, try again later')
+  );
+});
+$('adBonusBtn').addEventListener('click', ()=>{
+  if(state.adBonusUsed>=AD_BONUS_MAX) return;
+  showRewardedAd(
+    ()=>{
+      state.adBonusUsed+=1;
+      const g=Math.floor(Math.random()*10)+5, t=Math.floor(Math.random()*4)+2;
+      state.gems+=g; state.ton+=t;
+      state.tasks.watchAdCount=(state.tasks.watchAdCount||0)+1;
+      showToast('🎉 Bonus: +'+g+' 💎 and +'+t+' 🪙!');
+      saveState(); render();
+    },
+    ()=> showToast('⚠️ Ad not available right now, try again later')
+  );
+});
+
+/* ==================================================================
+   Withdraw
+================================================================== */
+$('withdrawBtn').addEventListener('click', ()=>{
+  if(state.ton<TARGET_TON_GEMS) return;
+  openModal('✅','Withdrawal requested','Your request for '+WITHDRAW_USD.toFixed(2)+'$ worth of TON Gems has been sent for review. No fee is required at any point in this process.');
+});
+
+/* ==================================================================
+   Friends
+================================================================== */
+$('copyInviteBtn').addEventListener('click', ()=>{
+  navigator.clipboard?.writeText($('inviteLink').value).then(()=>showToast('🔗 Invite link copied!')).catch(()=>showToast('🔗 '+$('inviteLink').value));
+});
+
+/* ==================================================================
+   Settings
+================================================================== */
+function toggleSwitch(el, key){
+  el.addEventListener('click', ()=>{
+    state.settings[key] = !state.settings[key];
+    el.classList.toggle('on', state.settings[key]);
+    if(key==='music'){ state.settings.music ? playMusic() : pauseMusic(); }
+    saveState();
+  });
+}
+toggleSwitch($('sfxSwitch'),'sfx');
+toggleSwitch($('musicSwitch'),'music');
+toggleSwitch($('notifSwitch'),'notif');
+$('volumeSlider').addEventListener('input', (e)=>{
+  state.settings.volume = parseInt(e.target.value);
+  $('bgMusic').volume = state.settings.volume/100;
+  saveState();
+});
+function playMusic(){ const m=$('bgMusic'); m.volume=state.settings.volume/100; m.play().catch(()=>{}); }
+function pauseMusic(){ $('bgMusic').pause(); }
+
+$('resetBtn').addEventListener('click', ()=>{
+  openModal('⚠️','Reset progress?','This will permanently erase all your farm progress. This cannot be undone.', null);
+  modalTitle.textContent='Reset progress?';
+  modalText.textContent='This will permanently erase all your farm progress. This cannot be undone.';
+  $('modalBtnRow').innerHTML = '<button class="modal-btn secondary" id="modalCancelBtn">Cancel</button><button class="modal-btn primary" id="modalConfirmResetBtn" style="background:var(--coral)">Reset</button>';
+  modalOverlay.classList.add('show');
+  $('modalCancelBtn').onclick=()=>modalOverlay.classList.remove('show');
+  $('modalConfirmResetBtn').onclick=()=>{
+    state=defaultState(); saveState(); render();
+    modalOverlay.classList.remove('show');
+    $('modalBtnRow').innerHTML='<button class="modal-btn primary" id="modalOkBtn">OK</button>';
+    showToast('🔄 Progress reset');
+  };
+});
+
+/* ==================================================================
+   Render
+================================================================== */
+function render(){
+  gemsLabel.textContent = state.gems;
+  tonLabel.textContent = state.ton;
+  energyLabel.textContent = state.energy;
+  energyBar.style.width = (state.energy/MAX_ENERGY*100)+'%';
+
+  levelLabel.textContent = 'Level '+state.level;
+  const needed=xpNeeded(state.level);
+  xpLabel.textContent = state.xp+' / '+needed+' XP';
+  xpBar.style.width = Math.min(100,(state.xp/needed*100))+'%';
+
+  renderChickens();
+  siloFill.style.height = Math.min(100, (state.gems%500)/500*100)+'%';
+
+  $('chickenCostLbl').textContent = 'Cost: '+chickenCost()+' 💎';
+  $('feedCostLbl').textContent = '+20 XP • Cost: '+feedCost()+' 💎';
+  $('toyCostLbl').textContent = '+35 XP • Cost: '+toyCost()+' 💎';
+  $('upgradeCostLbl').textContent = '+1 slot • Cost: '+upgradeCost()+' 💎';
+  $('buyChickenBtn').disabled = state.gems<chickenCost() || state.chickens>=state.coopSlots;
+
+  $('kpiChickens').textContent = state.chickens;
+  $('kpiRate').textContent = feedRatePerMin();
+  $('kpiGems').textContent = state.gems;
+  $('kpiTon').textContent = state.ton;
+  $('kpiStreak').textContent = state.streak+' 🔥';
+  $('kpiGoal').textContent = Math.min(100, Math.round(state.ton/TARGET_TON_GEMS*100))+'%';
+  $('barYesterday').style.height = Math.min(100, state.earnedYesterday/2)+'%';
+  $('barToday').style.height = Math.min(100, state.earnedToday/2)+'%';
+
+  renderTasks();
+  updateWheelUI();
+
+  $('thresholdLbl').textContent = '🏁 '+TARGET_TON_GEMS+' TON Gems (≈ $'+WITHDRAW_USD.toFixed(2)+')';
+  $('withdrawProgress').style.width = Math.min(100, state.ton/TARGET_TON_GEMS*100)+'%';
+  $('withdrawBtn').disabled = state.ton<TARGET_TON_GEMS;
+
+  $('sfxSwitch').classList.toggle('on', state.settings.sfx);
+  $('musicSwitch').classList.toggle('on', state.settings.music);
+  $('notifSwitch').classList.toggle('on', state.settings.notif);
+  $('volumeSlider').value = state.settings.volume;
+
+  saveState();
+}
+
+drawWheel();
+render();
+</script>
+</body>
+</html>
